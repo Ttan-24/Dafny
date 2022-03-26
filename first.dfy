@@ -1,31 +1,67 @@
-function method fibspec(n: nat): nat
-//decreases  n
-{
-    if (n==0) then 0 else
-      if (n==1) then 1 else
-        fibspec(n-1) + fibspec(n-2)
+class CarPark {
+    // a constructor for the class, setting the car-park up for a new day
+    constructor(newDay: string) 
+    {
+
+    }
+
+    // to allow any car without a reservation to enter the car park.
+    method enterCarPark(hasReservation: bool, IsFull: bool, car: int, countCar: int) 
+    {
+
+    }
+
+    // to allow any car from any area to leave the car park
+    method leaveCarPark(car: int, countCar: int)
+    {
+
+    }
+
+    // to report on the number of non-reserved free spaces currently available.
+    method checkAvailability(countCar: int) returns (numberOfNonReservedFreeSpaces: int)
+    {
+
+    }
+
+    // to allow a car with a subscription to enter the car park’s reserved area on a
+    // weekday, or to enter the car park generally on a weekend day
+    method enterReservedCarPark(hasReservation: bool, week: int) 
+    {
+
+    }
+
+    // to allow a car to be registered as having a reserved space when the owner
+    // pays the subscription – as long as subscriptions are available.
+    method makeSubscription(car: int) 
+    {
+
+    }
+
+    // to remove parking restrictions on the reserved spaces (at the weekend)
+    method openReservedArea(week: int, hasReservation: bool) 
+    {
+
+    }
+
+    // to remove and crush remaining parked cars at closing time.
+    method closeCarPark(time: int, car: int, countCar: int) 
+    {
+
+    }
+
+    // to display the car park in rows, indicating the state of each space.
+    method printParkingPlan()
+    {
+
+    }
+
+    // Your tests (main program) will tell me to what extent the specification has been met
+    method Main() {
+
+    }
 }
 
-method ComputeFib(n: nat) returns (b: nat) 
-//ensures b == fibspec(n); 
-{ 
-    if (n == 0) { return 0; } 
-    var i := 1; 
-    var a := 0; b := 1; 
-    while (i < n)
-        //invariant 0 < i <= n; 
-        //invariant a == fibspec(i - 1); 
-        //invariant b == fibspec(i); 
-    { 
-        a, b := b, a + b; 
-        i := i + 1; 
-    } 
-}
 
-method Main()
-{
-    print "Hello\n";
-    var x := ComputeFib(10);
-    var y := fibspec(10);
-    print x, "  ", y, "\n";
-}
+
+
+

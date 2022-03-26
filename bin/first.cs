@@ -11,40 +11,23 @@ using System.Numerics;
 // Command Line Options: c:\Users\User\Documents\GitHub\Dafny\first.dfy /verifyAllModules /spillTargetCode:1 /compile:3 /out:bin\first
 // first.dfy
 
-function method fibspec(n: nat): nat
-  decreases n
-{
-  if n == 0 then
-    0
-  else if n == 1 then
-    1
-  else
-    fibspec(n - 1) + fibspec(n - 2)
-}
-
-method ComputeFib(n: nat) returns (b: nat)
-  decreases n
-{
-  if n == 0 {
-    return 0;
-  }
-  var i := 1;
-  var a := 0;
-  b := 1;
-  while i < n
-    decreases n - i
-  {
-    a, b := b, a + b;
-    i := i + 1;
-  }
-}
-
 method Main()
 {
-  print ""Hello\n"";
-  var x := ComputeFib(10);
-  var y := fibspec(10);
-  print x, ""  "", y, ""\n"";
+  var s: seq<int>;
+  s := [1, 2, 3, 4, 5];
+  var seq2 := [1, 4, 9, 25];
+  print ""s == "", s, ""\n"";
+  print ""s + seq2 == "", s + seq2, ""\n"";
+  print ""s[|s|-1] == "", s[|s| - 1], ""\n"";
+  print ""s[|s|-1..|s|] == "", s[|s| - 1 .. |s|], ""\n"";
+  print ""s[1..] == "", s[1..], ""\n"";
+  print ""s[..|s|-1] == "", s[..|s| - 1], ""\n"";
+  print ""s[0..] == "", s[0..], ""\n"";
+  print ""s[..|s|] == "", s[..|s|], ""\n"";
+  print ""s[0..|s|] == "", s[0 .. |s|], ""\n"";
+  print ""s[..] == "", s[..], ""\n"";
+  print ""s[0..1] == "", s[0 .. 1], ""\n"";
+  print ""s[1..1] == "", s[1 .. 1], ""\n"";
 }
 ")]
 
@@ -1850,48 +1833,47 @@ namespace _System {
 namespace _module {
 
   public partial class __default {
-    public static BigInteger fibspec(BigInteger n) {
-      if ((n).Sign == 0) {
-        return BigInteger.Zero;
-      } else if ((n) == (BigInteger.One)) {
-        return BigInteger.One;
-      } else {
-        return (__default.fibspec((n) - (BigInteger.One))) + (__default.fibspec((n) - (new BigInteger(2))));
-      }
-    }
-    public static BigInteger ComputeFib(BigInteger n)
-    {
-      BigInteger b = BigInteger.Zero;
-      if ((n).Sign == 0) {
-        b = BigInteger.Zero;
-        return b;
-      }
-      BigInteger _20_i;
-      _20_i = BigInteger.One;
-      BigInteger _21_a;
-      _21_a = BigInteger.Zero;
-      b = BigInteger.One;
-      while ((_20_i) < (n)) {
-        BigInteger _rhs0 = b;
-        BigInteger _rhs1 = (_21_a) + (b);
-        _21_a = _rhs0;
-        b = _rhs1;
-        _20_i = (_20_i) + (BigInteger.One);
-      }
-      return b;
-    }
     public static void _Main()
     {
-      Dafny.Helpers.Print(Dafny.Sequence<char>.FromString("Hello\n"));
-      BigInteger _22_x;
-      BigInteger _out0;
-      _out0 = __default.ComputeFib(new BigInteger(10));
-      _22_x = _out0;
-      BigInteger _23_y;
-      _23_y = __default.fibspec(new BigInteger(10));
-      Dafny.Helpers.Print(_22_x);
-      Dafny.Helpers.Print(Dafny.Sequence<char>.FromString("  "));
-      Dafny.Helpers.Print(_23_y);
+      Dafny.ISequence<BigInteger> _11_s = Dafny.Sequence<BigInteger>.Empty;
+      _11_s = Dafny.Sequence<BigInteger>.FromElements(BigInteger.One, new BigInteger(2), new BigInteger(3), new BigInteger(4), new BigInteger(5));
+      Dafny.ISequence<BigInteger> _12_seq2;
+      _12_seq2 = Dafny.Sequence<BigInteger>.FromElements(BigInteger.One, new BigInteger(4), new BigInteger(9), new BigInteger(25));
+      Dafny.Helpers.Print(Dafny.Sequence<char>.FromString("s == "));
+      Dafny.Helpers.Print(_11_s);
+      Dafny.Helpers.Print(Dafny.Sequence<char>.FromString("\n"));
+      Dafny.Helpers.Print(Dafny.Sequence<char>.FromString("s + seq2 == "));
+      Dafny.Helpers.Print(Dafny.Sequence<BigInteger>.Concat(_11_s, _12_seq2));
+      Dafny.Helpers.Print(Dafny.Sequence<char>.FromString("\n"));
+      Dafny.Helpers.Print(Dafny.Sequence<char>.FromString("s[|s|-1] == "));
+      Dafny.Helpers.Print((_11_s).Select((new BigInteger((_11_s).Count)) - (BigInteger.One)));
+      Dafny.Helpers.Print(Dafny.Sequence<char>.FromString("\n"));
+      Dafny.Helpers.Print(Dafny.Sequence<char>.FromString("s[|s|-1..|s|] == "));
+      Dafny.Helpers.Print((_11_s).Subsequence((new BigInteger((_11_s).Count)) - (BigInteger.One), new BigInteger((_11_s).Count)));
+      Dafny.Helpers.Print(Dafny.Sequence<char>.FromString("\n"));
+      Dafny.Helpers.Print(Dafny.Sequence<char>.FromString("s[1..] == "));
+      Dafny.Helpers.Print((_11_s).Drop(BigInteger.One));
+      Dafny.Helpers.Print(Dafny.Sequence<char>.FromString("\n"));
+      Dafny.Helpers.Print(Dafny.Sequence<char>.FromString("s[..|s|-1] == "));
+      Dafny.Helpers.Print((_11_s).Take((new BigInteger((_11_s).Count)) - (BigInteger.One)));
+      Dafny.Helpers.Print(Dafny.Sequence<char>.FromString("\n"));
+      Dafny.Helpers.Print(Dafny.Sequence<char>.FromString("s[0..] == "));
+      Dafny.Helpers.Print((_11_s).Drop(BigInteger.Zero));
+      Dafny.Helpers.Print(Dafny.Sequence<char>.FromString("\n"));
+      Dafny.Helpers.Print(Dafny.Sequence<char>.FromString("s[..|s|] == "));
+      Dafny.Helpers.Print((_11_s).Take(new BigInteger((_11_s).Count)));
+      Dafny.Helpers.Print(Dafny.Sequence<char>.FromString("\n"));
+      Dafny.Helpers.Print(Dafny.Sequence<char>.FromString("s[0..|s|] == "));
+      Dafny.Helpers.Print((_11_s).Subsequence(BigInteger.Zero, new BigInteger((_11_s).Count)));
+      Dafny.Helpers.Print(Dafny.Sequence<char>.FromString("\n"));
+      Dafny.Helpers.Print(Dafny.Sequence<char>.FromString("s[..] == "));
+      Dafny.Helpers.Print((_11_s));
+      Dafny.Helpers.Print(Dafny.Sequence<char>.FromString("\n"));
+      Dafny.Helpers.Print(Dafny.Sequence<char>.FromString("s[0..1] == "));
+      Dafny.Helpers.Print((_11_s).Subsequence(BigInteger.Zero, BigInteger.One));
+      Dafny.Helpers.Print(Dafny.Sequence<char>.FromString("\n"));
+      Dafny.Helpers.Print(Dafny.Sequence<char>.FromString("s[1..1] == "));
+      Dafny.Helpers.Print((_11_s).Subsequence(BigInteger.One, BigInteger.One));
       Dafny.Helpers.Print(Dafny.Sequence<char>.FromString("\n"));
     }
   }
