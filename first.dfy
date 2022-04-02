@@ -11,15 +11,18 @@ class CarPark {
     var isWeekday: bool;
     var spaceIndentCount: int;
     var subscriptionsCount: int; 
+    var subscriptionsCountMax: int; 
     var extraSpaces: int;
 
     // a constructor for the class, setting the car-park up for a new day
     constructor(aSpaces: int, aReservedSpaces: int, aDay: int) 
     requires aReservedSpaces >= 0
     requires aSpaces >= 0
+    requires aDay >= 0 && aDay <= 6
     ensures fresh(subscriptions)
     ensures fresh(spacesArr)
     ensures fresh(reservedSpacesArr)
+    //ensures subscriptionsCount <= subscriptionsCountMax
     {
         /*
         Preconditions:
@@ -28,6 +31,7 @@ class CarPark {
         */
         spaceIndentCount := 8; 
         subscriptionsCount := 0;
+        subscriptionsCountMax := aReservedSpaces;
         
         // Regular spaces
 		spaces := aSpaces;
@@ -55,18 +59,37 @@ class CarPark {
         setWeekday(aDay);
     }
 
+    // predicate Valid()
+    // reads this;
+    // {
+    //     // Ensures subscriptions do not exceed their maximum from the constructor argument
+    //     //subscriptionsCount <= subscriptionsCountMax
+
+    //     // Ensures the spaces used to not exceed the max spaces
+    //     //spacesUsed < spaces
+    //     //reservedSpacesUsed < reservedSpaces
+
+    //     // Ensure the size of each license plate is 0 or 8
+    //     //(forall i: int :: 0 <= i < spacesArr.Length ==> |spacesArr[i]| == 8 || |spacesArr[i]| == 0) &&
+    //     //(forall k: int :: 0 <= k < reservedSpacesArr.Length ==> |reservedSpacesArr[k]| == 8 || |reservedSpacesArr[k]| == 0)
+    // }
+
     method setWeekday(day: int)
     modifies this
+    requires day >= 0 && day <= 6
     ensures subscriptions == old(subscriptions)
     ensures spacesArr == old(spacesArr)
     ensures reservedSpacesArr == old(reservedSpacesArr)
+    //ensures subscriptionsCount <= subscriptionsCountMax
 	{
+        isWeekday := true;
 		if (day > 4)
 		{
 			openReservedArea();
 		}
 	}
 
+    // to report on the number of non-reserved free spaces currently available.
     method checkAvailability() returns (result: int)
 	{
 	    if (isWeekday)
@@ -88,13 +111,13 @@ class CarPark {
     }
 
     
-
-    method AddCar(aCar: string)  
-    requires spacesArr.Length > 0
+    //to allow any car without a reservation to enter the car park
+    method enterCarPark(aCar: string)  
+    requires spacesArr.Length >= 0
     modifies spacesArr
     modifies reservedSpacesArr
     modifies this
-    ensures spacesArr.Length > 0
+    ensures spacesArr.Length >= 0
     ensures spacesArr == old(spacesArr)
     ensures reservedSpacesArr == old(reservedSpacesArr)
     ensures subscriptions == old(subscriptions)
@@ -143,8 +166,9 @@ class CarPark {
         }
 	}
 
-    method RemoveCar(aCar: string)  
-    requires spacesArr.Length > 0 || reservedSpacesArr.Length > 0
+    //to allow any car from any area to leave the car park
+    method leaveCarPark(aCar: string)  
+    requires spacesArr.Length >= 0 || reservedSpacesArr.Length >= 0
     //requires reservedSpacesArr.Length > 0
     modifies spacesArr
     modifies reservedSpacesArr
@@ -186,7 +210,9 @@ class CarPark {
         }
 	}
 
-    method AddCarReserved(aCar: string)
+    // to allow a car with a subscription to enter the car park’s reserved area on a
+    // weekday, or to enter the car park generally on a weekend day
+    method enterReservedCarPark(aCar: string)
     modifies subscriptions
     modifies reservedSpacesArr
     modifies this
@@ -194,15 +220,7 @@ class CarPark {
     ensures spacesArr == old(spacesArr)
     ensures reservedSpacesArr == old(reservedSpacesArr)
     {
-        // Stop if full
-        var availableSpaces : int;
-        availableSpaces := checkAvailability();
-        if (availableSpaces <= 0)
-        {
-            return;
-        }
-
-        // Stop if not reserved
+        // Check for subscription
         var i: int := 0;
         var subscriptionFound: bool := false;
         while (i < subscriptions.Length)
@@ -215,13 +233,23 @@ class CarPark {
             i := i + 1;
         }
 
-        if (subscriptionFound == false && !isWeekday)
+        // return if subscription not found and is weekday
+        if (subscriptionFound == false && isWeekday)
         {
             print("Could not add " + aCar + " to reserved carpark because it did not have a subscription \n");
+            return;
         }
-        else
+        
+        // Stop if full
+        var availableSpaces : int;
+        availableSpaces := checkAvailability();
+        if (availableSpaces <= 0)
         {
-            // Otherwise search for space
+            print("Carpark is full");
+            return;
+        }
+        else // Otherwise search for space
+        {
             var i: int := 0;
             while (i < reservedSpacesArr.Length) 
             decreases reservedSpacesArr.Length - i
@@ -238,7 +266,9 @@ class CarPark {
         }
     }
 
-    method CreateSubscription(aCar: string)
+    // to allow a car to be registered as having a reserved space when the owner
+    // pays the subscription – as long as subscriptions are available.
+    method makeSubscription(aCar: string)
     modifies subscriptions 
     ensures this == old(this)
     ensures subscriptions == old(subscriptions)
@@ -257,89 +287,15 @@ class CarPark {
         // subscriptionsCount := subscriptionsCount + 1;
 	}
 
-    // to allow any car without a reservation to enter the car park.
-    method enterCarPark(hasReservation: bool, IsFull: bool, car: int, carCount: int) 
-    //requires IsFull(CarParkSpaces)
-    //ensures day > 0 || day <= 0
-    {
-        /*
-        Preconditions:
-        - hasreservation should be false
-        - is not full
-        - carCount should not be negative
-        - carCount should not be bigger than spaces available
-        - car int should not be negative
-        */
-
-    }
-
-    // to allow any car from any area to leave the car park
-    method leaveCarPark(car: int, carCount: int)
-    {
-        /*
-        Preconditions:
-        - car should not be negative
-        - carCount should not be negative
-        */
-    }
-
-    // to report on the number of non-reserved free spaces currently available.
-    //method checkAvailability(carCount: int, isWeekend: bool) returns (numberOfNonReservedFreeSpaces: int)
-    //{
-        /*
-        Preconditions:
-        - carCount should not be negative
-
-        Postconditions:
-        - numberOfNonReservedFreeSpaces should not be greater than total spaces
-        */
-    //}
-
-    // to allow a car with a subscription to enter the car park’s reserved area on a
-    // weekday, or to enter the car park generally on a weekend day
-    method enterReservedCarPark(hasReservation: bool, isWeekend: bool, isFull: bool) 
-    {
-        /*
-        Preconditions:
-        - is a weekday ==> hasreservation should be true
-        - should not be full
-
-        Postconditions:
-        - 
-        */
-    }
-
-    // to allow a car to be registered as having a reserved space when the owner
-    // pays the subscription – as long as subscriptions are available.
-    method makeSubscription(car: int, IsSubscriptionAvailable: bool) 
-    {
-        /*
-        Preconditions:
-        - Car should not be negative
-        - IsSubscriptionAvailable true then only hasReservation true
-
-        Postconditions:
-        - 
-        */
-    }
-
     // to remove parking restrictions on the reserved spaces (at the weekend)
     method openReservedArea()
     modifies this 
     ensures subscriptions == old(subscriptions)
     ensures spacesArr == old(spacesArr)
     ensures reservedSpacesArr == old(reservedSpacesArr)
+    //ensures subscriptionsCount <= subscriptionsCountMax
     {
-        /*
-        Preconditions:
-        - week should not be negative
-        - hasReservation is false if week is a weekend
-
-        Postconditions:
-        - 
-        */
-
-        isWeekday := false;
+         isWeekday := false;
     }
 
     // to remove and crush remaining parked cars at closing time.
@@ -347,15 +303,6 @@ class CarPark {
     modifies spacesArr
     modifies reservedSpacesArr
     {
-        /*
-        Preconditions:
-        - time should not be negative
-        - time >= 11 then car remove and carCount is subtracted 
-
-        Postconditions:
-        - 
-        */
-
         // Reset all spaces
         var i: int := 0;
         while (i < reservedSpacesArr.Length) 
@@ -375,21 +322,6 @@ class CarPark {
 
     // to display the car park in rows, indicating the state of each space.
     method printParkingPlan()
-    {
-        /*
-        Preconditions:
-        - 
-
-        Postconditions:
-        - 
-        */
-    }
-
-    // predicate IsFull(Array: array<bool>) 
-    // { forall element :: 0 < element < Array.Length ==> Array[element] != false }
-    predicate Even( x : int ) { x % 2 == 0 }
-
-    method Display()
 	{
         //checkAvailability();
 
@@ -465,75 +397,162 @@ class CarPark {
 
 // Your tests (main program) will tell me to what extent the specification has been met
 method Main() {
-    /*
-    Preconditions:
-    - 
-
-    Postconditions:
-    - 
-    */
+    
     print("--------------------------------------------------- \n");
     print("Program start \n");
     print("--------------------------------------------------- \n");
      
+
+    print("--------------------------------------------------- \n");
+    print("WEEKENDS \n");
+    print("--------------------------------------------------- \n");
     var carPark : CarPark;
+
+    // setting it to weekend
     carPark :=  new CarPark(10, 10, 5);
 
-    //carPark := new CarPark(10, 10, 3);
-
     // Display start
-	carPark.Display();
+	carPark.printParkingPlan();
     // Display adding cars
     if (carPark.spacesArr.Length > 0) {
 
         // Make subscriptions
-        carPark.CreateSubscription("11111111");
-        carPark.CreateSubscription("22222222");
-        carPark.CreateSubscription("33333333");
-        carPark.CreateSubscription("44444444");
-        carPark.CreateSubscription("55555555");
-        carPark.CreateSubscription("77777777");
-        carPark.CreateSubscription("88888888");
+        carPark.makeSubscription("11111111");
+        carPark.makeSubscription("22222222");
+        carPark.makeSubscription("33333333");
+        carPark.makeSubscription("44444444");
+        carPark.makeSubscription("55555555");
+        carPark.makeSubscription("77777777");
+        carPark.makeSubscription("88888888");
 
         
         //adding cars in the area
-	    carPark.AddCar("AAAAAAAA");
-	    carPark.AddCar("BBBBBBBB");
-	    carPark.AddCar("CCCCCCCC");
-        carPark.AddCar("DDDDDDDD");
-        carPark.AddCar("EEEEEEEE");
-        carPark.AddCar("FFFFFFFF");
-        carPark.AddCar("GGGGGGGG");
-        carPark.AddCar("HHHHHHHH");
-        carPark.AddCar("IIIIIIII");
-        carPark.AddCar("JJJJJJJJ");
-        carPark.AddCar("KKKKKKKK");
-        carPark.AddCar("LLLLLLLL");
-        carPark.Display();
+        print ("Demo: Adding cars in the area");
+	    carPark.enterCarPark("AAAAAAAA");
+	    carPark.enterCarPark("BBBBBBBB");
+	    carPark.enterCarPark("CCCCCCCC");
+        carPark.enterCarPark("DDDDDDDD");
+        carPark.enterCarPark("EEEEEEEE");
+        carPark.enterCarPark("FFFFFFFF");
+        carPark.enterCarPark("GGGGGGGG");
+        carPark.enterCarPark("HHHHHHHH");
+        carPark.enterCarPark("IIIIIIII");
+        carPark.enterCarPark("JJJJJJJJ");
+        carPark.enterCarPark("KKKKKKKK");
+        carPark.enterCarPark("LLLLLLLL");
+        carPark.printParkingPlan();
 
         // removing a car from the area
-        carPark.RemoveCar("BBBBBBBB");
-        carPark.Display();
+        print ("Demo: Removing cars from the area");
+        carPark.leaveCarPark("BBBBBBBB");
+        carPark.printParkingPlan();
 
         // Add subscribed cars
-        carPark.AddCarReserved("11111111");
-        carPark.AddCarReserved("22222222");
-        carPark.AddCarReserved("33333333");
-        carPark.AddCarReserved("44444444");
-        carPark.AddCarReserved("55555555");
-        carPark.AddCarReserved("66666666");
-        carPark.AddCarReserved("77777777");
-        carPark.AddCarReserved("88888888");
-        carPark.Display();
+        print ("Demo: Added reserved cars in the reserved area");
+        carPark.enterReservedCarPark("11111111");
+        carPark.enterReservedCarPark("22222222");
+        carPark.printParkingPlan();
         
         // remove car from the reserved area
-        carPark.RemoveCar("11111111");
-        carPark.Display();
+        print ("Demo: Remove reserved cars in the reserved area");
+        carPark.leaveCarPark("11111111");
+        carPark.printParkingPlan();
+
+        // attempting to add a non reserved car in a reserved space in a weekend
+        print ("Demo: Attempting to add a non reserved car in a reserved space in a weekend");
+        carPark.enterReservedCarPark("NNNNNNNN");
+        carPark.printParkingPlan();
+
+        // should leave 5 remaining space 
+        print ("Demo: Checking if it leaves 5 remaining spaces");
+        carPark.enterReservedCarPark("33333333");
+        carPark.enterReservedCarPark("44444444");
+        carPark.enterReservedCarPark("55555555");
+        carPark.enterReservedCarPark("66666666");
+        carPark.enterReservedCarPark("77777777");
+        carPark.enterReservedCarPark("88888888");
+        carPark.printParkingPlan();
 
         // Close carpark
+        print ("Demo: Checking if it removes all cars when it closes the carpark");
         print("Closing carpark");
         carPark.closeCarPark();
-        carPark.Display();
+        carPark.printParkingPlan();
+    }
+
+
+    print("--------------------------------------------------- \n");
+    print("WEEK DAYS \n");
+    print("--------------------------------------------------- \n");
+    
+    // setting it to weekday
+    carPark.setWeekday(3);
+
+    carPark :=  new CarPark(10, 10, 3);
+
+    // Display start
+	carPark.printParkingPlan();
+    // Display adding cars
+    if (carPark.spacesArr.Length > 0) {
+
+        // Make subscriptions
+        carPark.makeSubscription("11111111");
+        carPark.makeSubscription("22222222");
+        carPark.makeSubscription("33333333");
+        carPark.makeSubscription("44444444");
+        carPark.makeSubscription("55555555");
+        carPark.makeSubscription("77777777");
+        carPark.makeSubscription("88888888");
+
+        
+        //adding cars in the area
+        print ("Demo: Adding cars in non reserved area and checking if it leaves 5 remaining spaces in a weekday");
+	    carPark.enterCarPark("AAAAAAAA");
+	    carPark.enterCarPark("BBBBBBBB");
+	    carPark.enterCarPark("CCCCCCCC");
+        carPark.enterCarPark("DDDDDDDD");
+        carPark.enterCarPark("EEEEEEEE");
+        carPark.enterCarPark("FFFFFFFF");
+        carPark.enterCarPark("GGGGGGGG");
+        carPark.enterCarPark("HHHHHHHH");
+        carPark.enterCarPark("IIIIIIII");
+        carPark.enterCarPark("JJJJJJJJ");
+        carPark.enterCarPark("KKKKKKKK");
+        carPark.enterCarPark("LLLLLLLL");
+        carPark.printParkingPlan();
+
+        // removing a car from the area
+        print ("Demo: Removing cars in an area");
+        carPark.leaveCarPark("BBBBBBBB");
+        carPark.printParkingPlan();
+
+        // Add subscribed cars
+        print ("Demo: Adding reserved cars in a reserved area");
+        carPark.enterReservedCarPark("11111111");
+        carPark.enterReservedCarPark("22222222");
+        carPark.enterReservedCarPark("33333333");
+        carPark.enterReservedCarPark("44444444");
+        carPark.enterReservedCarPark("55555555");
+        carPark.enterReservedCarPark("66666666");
+        carPark.enterReservedCarPark("77777777");
+        carPark.enterReservedCarPark("88888888");
+        carPark.printParkingPlan();
+        
+        // remove car from the reserved area
+        print ("Demo: Remove reserved car in a reserved area");
+        carPark.leaveCarPark("11111111");
+        carPark.printParkingPlan();
+
+        // attempting to add a non reserved car in a reserved space in a week day
+        print ("Demo: Attempting to add a non reserved car in a reserved space in a week day");
+        carPark.enterReservedCarPark("NNNNNNNN");
+        carPark.printParkingPlan();
+
+        // Close carpark
+        print ("Demo: Checking if it removes all cars when it closes the carpark");
+        print("Closing carpark");
+        carPark.closeCarPark();
+        carPark.printParkingPlan();
     }
 }
 
